@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: certs_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  redis:
+    image: redis:latest
+
+  api:
+    build: ./api
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+
+  worker:
+    build: ./worker
+    volumes:
+      - ./pdfs:/app/pdfs
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+
+volumes:
+  db_data:
